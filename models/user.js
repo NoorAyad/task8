@@ -2,7 +2,7 @@ const client = require("../db");
 const bcrypt = require("bcrypt");
 var jwt = require("jsonwebtoken");
 require("dotenv").config();
-
+//login
 const login = async (req, res) => {
   try {
     let { username, password } = req.body;
@@ -20,7 +20,7 @@ const login = async (req, res) => {
         var token = jwt.sign(user, process.env.USER_ACCESS_TOKEN);
         res.send({ success: true, token, user });
       } else {
-        res.send({ success: false, msg: "Wrong password!" });
+        res.send({ success: false, msg: "Wrong password !..." });
       }
     }
   } catch (error) {
