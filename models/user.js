@@ -25,7 +25,9 @@ const login = async (req, res) => {
     }
   } catch (error) {
     console.error("Error during login:", error);
-    res.status(500).send({ success: false, msg: "Internal Server Error" });
+    res
+      .status(500)
+      .send({ success: false, msg: "Internal Server Error...:", error });
   }
 };
 
