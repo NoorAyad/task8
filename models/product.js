@@ -1,4 +1,5 @@
 const client = require("../db");
+const { uploadFile } = require("@uploadcare/upload-client");
 
 const Products = async (req, res) => {
   let search = req.query.search || "";
@@ -33,12 +34,22 @@ const Products = async (req, res) => {
 };
 
 const addProducts = async (req, res) => {
-  const { name, price, discount, description } = req.body;
-  const image = upload(req, res) || "no image";
+  const result = await uploadFile(req.files.foo.data, {
+    publicKey: process.env.PUBLIC_KEY,
+    store: "auto",
+    metadata: {
+      subsystem: "uploader",
+      pet: "cat",
+    },
+  });
+  const image = result.cdnUrl;
+  const { name, description, category } = req.body;
+  const price = parseFloat(req.body.price);
+  const discount = parseFloat(req.body.discount);
   try {
     const result = await client.query(
-      `INSERT INTO products(name, price, discount, image, active, description)
-      VALUES('${name}', ${price}, ${discount},'${image}', true,'${description}') 
+      `INSERT INTO products(name, price, discount, image, category, active, description)
+      VALUES('${name}', ${price}, ${discount},'${image}', '${category}', true,'${description}') 
       RETURNING *`
     );
 
@@ -59,12 +70,32 @@ const addProducts = async (req, res) => {
 
 const updateProducts = async (req, res) => {
   const id = req.params.id;
-  const { name, price, discount, image, active, description } = req.body;
+  const result = await uploadFile(req.files.foo.data, {
+    publicKey: process.env.PUBLIC_KEY,
+    store: "auto",
+    metadata: {
+      subsystem: "uploader",
+      pet: "cat",
+    },
+  });
+  const image = result.cdnUrl;
+  const { name, description, category } = req.body;
+  let active = req.body.active;
+  active == "true"
+    ? (active = true)
+    : active == "false"
+    ? (active = false)
+    : null;
+  const price = parseFloat(req.body.price);
+  const discount = parseFloat(req.body.discount);
+  // console.log({name,price,discount,image,active,description,category});
 
   try {
     const result = await client.query(`
         UPDATE products
-        SET name = '${name}', price = ${price}, discount = ${discount}, image = '${image}', active = ${active}, description = '${description}'
+        SET name = '${name}', price = ${price}, discount = ${discount},
+        image = '${image}', active = ${active}, description = '${description}',
+        category = '${category}'
         WHERE id = ${id}
         RETURNING *;
       `);
@@ -104,25 +135,5 @@ const deleteProducts = async (req, res) => {
     deletedProduct,
   });
 };
-
-// const upload = (req, res) => {
-//   var uploadedFile;
-//   if (!req.files.foo) {
-//     req.files.foo = "no image";
-//     uploadedFile = req.files.foo;
-//   } else {
-//     uploadedFile = req.files.foo;
-//   }
-//   const filePath = `images/${Date.now() + uploadedFile.name}`;
-
-//   uploadedFile.mv(filePath, (err) => {
-//     if (err) {
-//       return res.status(500).send({ err });
-//     } else {
-//       res.status(200).send("File uploaded");
-//       return filePath;
-//     }
-//   });
-// };
 
 module.exports = { Products, addProducts, updateProducts, deleteProducts };
